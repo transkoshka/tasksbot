@@ -1,3 +1,6 @@
+# ⚠️ Это резервная версия скрипта.
+# Основной код, используемый Render, лежит в `bot_forrrender.py`.
+# Не удалять — пригодится, когда буду работать не через косытыль website, а через платный background worker.
 import os
 from dotenv import load_dotenv
 load_dotenv()
