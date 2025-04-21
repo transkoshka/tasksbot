@@ -8,8 +8,8 @@ from telegram import Update
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
 # 🔐 Вставь свои ключи
-TELEGRAM_TOKEN = os.getenv("7735357077:AAGSWIyVysU5a4DK6F8Qsdl1EOpFIeeyMok")
-WEBHOOK_URL = os.getenv("https://script.google.com/macros/s/AKfycbzhCvZDrcinAYHl5LYp-59a9l5PzYPRyOnI1JJXVNRO9yXBs8lJw3iT6T2KIY6flIkq/exec")
+TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
+WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
 # 📜 Обработка входящих сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
