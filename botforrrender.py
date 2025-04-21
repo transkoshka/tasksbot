@@ -30,18 +30,19 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # 🧠 Основной запуск
 async def main():
-    app = Application.builder().token(TELEGRAM_TOKEN).build()
-    app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
-    print("🐾 Webhook-бот запущен и ждёт входящих.")
+    async def main():
+        app = Application.builder().token(TELEGRAM_TOKEN).build()
+        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    # 🧙‍♀️ Запуск через webhook
-    await app.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 8443)),
-        webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
-    )
+        print("✨ Бот запускается через webhook...")
+
+        await app.run_webhook(
+            listen="0.0.0.0",
+            port=int(os.environ.get("PORT", 8443)),
+            webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
+        )
 
 # 🚀 Запуск
 if __name__ == '__main__':
-    nest_asyncio.apply()
-    asyncio.get_event_loop().run_until_complete(main())
+    import asyncio
+    asyncio.run(main())
