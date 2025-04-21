@@ -4,14 +4,15 @@ load_dotenv()
 import asyncio
 import nest_asyncio
 import requests
+from aiohttp import web
 from telegram import Update
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
-# 🔐 Вставь свои ключи
+# 🔐 Секреты
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
 
-# 📜 Обработка входящих сообщений
+# 📜 Обработка сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_text = update.message.text.strip()
 
@@ -28,21 +29,34 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("👀 Я реагирую только на команды вида `#задача ...`")
 
+# 🎭 Притворяемся веб-сервером
+async def start_fake_server():
+    async def handle(request):
+        return web.Response(text="Webhook bot is alive!")
+
+    app = web.Application()
+    app.add_routes([web.get('/', handle)])
+    runner = web.AppRunner(app)
+    await runner.setup()
+    site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8443)))
+    await site.start()
+
 # 🧠 Основной запуск
 async def main():
-    async def main():
-        app = Application.builder().token(TELEGRAM_TOKEN).build()
-        app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
+    application = Application.builder().token(TELEGRAM_TOKEN).build()
+    application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-        print("✨ Бот запускается через webhook...")
+    print("🔌 Запускаю фальшивый сервер...")
+    await start_fake_server()
 
-        await app.run_webhook(
-            listen="0.0.0.0",
-            port=int(os.environ.get("PORT", 8443)),
-            webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
-        )
+    print("✨ Бот запускается через webhook...")
+    await application.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 8443)),
+        webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
+    )
 
-# 🚀 Запуск
+# 🚀 Поехали
 if __name__ == '__main__':
-    import asyncio
+    nest_asyncio.apply()
     asyncio.run(main())
