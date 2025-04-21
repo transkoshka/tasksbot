@@ -41,13 +41,11 @@ async def start_fake_server():
     site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8443)))
     await site.start()
 
-# 🧠 Основной запуск
 async def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
     print("🔌 Запускаю фальшивый сервер и бота...")
-
     await asyncio.gather(
         start_fake_server(),
         application.run_webhook(
@@ -57,7 +55,9 @@ async def main():
         )
     )
 
-# 🚀 Поехали
 if __name__ == '__main__':
+    import nest_asyncio
     nest_asyncio.apply()
-    asyncio.run(main())
+
+    loop = asyncio.get_event_loop()
+    loop.run_until_complete(main())
