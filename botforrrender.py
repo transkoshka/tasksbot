@@ -46,14 +46,15 @@ async def main():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("🔌 Запускаю фальшивый сервер...")
-    await start_fake_server()
+    print("🔌 Запускаю фальшивый сервер и бота...")
 
-    print("✨ Бот запускается через webhook...")
-    await application.run_webhook(
-        listen="0.0.0.0",
-        port=int(os.environ.get("PORT", 8443)),
-        webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
+    await asyncio.gather(
+        start_fake_server(),
+        application.run_webhook(
+            listen="0.0.0.0",
+            port=int(os.environ.get("PORT", 8443)),
+            webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
+        )
     )
 
 # 🚀 Поехали
