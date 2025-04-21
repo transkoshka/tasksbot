@@ -1,7 +1,6 @@
+import os
 from dotenv import load_dotenv
 load_dotenv()
-
-import os
 import asyncio
 import nest_asyncio
 import requests
