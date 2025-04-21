@@ -1,6 +1,7 @@
 import os
 from dotenv import load_dotenv
 load_dotenv()
+
 import asyncio
 import nest_asyncio
 import requests
@@ -29,7 +30,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("👀 Я реагирую только на команды вида `#задача ...`")
 
-# 🎭 Притворяемся веб-сервером
+# 🎭 Фальшивый веб-сервер для Render
 async def start_fake_server():
     async def handle(request):
         return web.Response(text="Webhook bot is alive!")
@@ -41,23 +42,22 @@ async def start_fake_server():
     site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8443)))
     await site.start()
 
-async def main():
+# 🧠 Главная функция запуска
+async def start_bot():
     application = Application.builder().token(TELEGRAM_TOKEN).build()
     application.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("🔌 Запускаю фальшивый сервер и бота...")
-    await asyncio.gather(
-        start_fake_server(),
-        application.run_webhook(
-            listen="0.0.0.0",
-            port=int(os.environ.get("PORT", 8443)),
-            webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
-        )
+    print("🔌 Стартуем фальшивый сервер...")
+    await start_fake_server()
+
+    print("✨ Бот запускается через webhook...")
+    await application.run_webhook(
+        listen="0.0.0.0",
+        port=int(os.environ.get("PORT", 8443)),
+        webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
     )
 
+# 🚀 Вход в программу
 if __name__ == '__main__':
-    import nest_asyncio
     nest_asyncio.apply()
-
-    loop = asyncio.get_event_loop()
-    loop.run_until_complete(main())
+    asyncio.run(start_bot())
