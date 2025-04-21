@@ -60,4 +60,6 @@ async def start_bot():
 # 🚀 Вход в программу
 if __name__ == '__main__':
     nest_asyncio.apply()
-    asyncio.run(start_bot())
+    loop = asyncio.get_event_loop()
+    loop.create_task(start_bot())
+    loop.run_forever()
