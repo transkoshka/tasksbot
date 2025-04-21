@@ -2,14 +2,15 @@ import os
 from dotenv import load_dotenv
 load_dotenv()
 import asyncio
-import requests
 import nest_asyncio
+import requests
 from telegram import Update
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
 # 🔐 Секреты
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL")
 
 # 📜 Обработка сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -26,7 +27,7 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         except Exception as e:
             await update.message.reply_text(f"🚫 Ошибка отправки: {e}")
     else:
-        await update.message.reply_text("👀 Я реагирую только на команды вида `#задача ...`")
+        await update.message.reply_text("👀 Я реагирую только на команды вида `todo ...`")
 
 # 🧠 Основной запуск
 async def main():
@@ -37,12 +38,10 @@ async def main():
     await application.run_webhook(
         listen="0.0.0.0",
         port=int(os.environ.get("PORT", 8443)),
-        webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
+        webhook_url=RENDER_EXTERNAL_URL + "/webhook"
     )
 
 # 🚀 Поехали
 if __name__ == '__main__':
-    import nest_asyncio
     nest_asyncio.apply()
-    import asyncio
     asyncio.run(main())
