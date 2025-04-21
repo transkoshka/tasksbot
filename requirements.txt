@@ -1,5 +1,5 @@
 python-telegram-bot[webhooks]==20.6
+aiohttp
 requests
 nest_asyncio
 python-dotenv
-aiohttp
