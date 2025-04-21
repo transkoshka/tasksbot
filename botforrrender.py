@@ -1,17 +1,29 @@
 import os
-from dotenv import load_dotenv
-load_dotenv()
 import asyncio
 import requests
+import nest_asyncio
 from aiohttp import web
+from dotenv import load_dotenv
 from telegram import Update
 from telegram.ext import Application, ContextTypes, MessageHandler, filters
 
+# 🎭 Притворяемся живыми
+load_dotenv()
+nest_asyncio.apply()
+
 TELEGRAM_TOKEN = os.getenv("TELEGRAM_TOKEN")
 WEBHOOK_URL = os.getenv("WEBHOOK_URL")
+RENDER_EXTERNAL_URL = os.getenv("RENDER_EXTERNAL_URL")
+PORT = int(os.environ.get("PORT", 8443))
 
+if not TELEGRAM_TOKEN or not RENDER_EXTERNAL_URL:
+    raise RuntimeError("❌ Переменные окружения не установлены!")
+
+
+# 📜 Обработка входящих сообщений
 async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     message_text = update.message.text.strip()
+    print(f"[📩] Получено сообщение: {message_text}")
 
     if message_text.startswith("todo"):
         task_text = message_text.replace("todo", "").strip()
@@ -26,33 +38,51 @@ async def handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     else:
         await update.message.reply_text("👀 Я реагирую только на команды вида `todo ...`")
 
-async def fake_server():
-    async def handle(request):
+
+# 🌐 Фальшивый сервер, чтобы Render поверил
+async def start_fake_server():
+    async def handle_get(request):
         return web.Response(text="Webhook bot is alive!")
 
+    async def handle_post(request):
+        data = await request.text()
+        print(f"[📡] POST на /webhook: {data}")
+        return web.Response(text="OK")
+
     app = web.Application()
-    app.add_routes([web.get("/", handle)])
+    app.router.add_get("/", handle_get)
+    app.router.add_post("/webhook", handle_post)
     runner = web.AppRunner(app)
     await runner.setup()
-    site = web.TCPSite(runner, "0.0.0.0", int(os.environ.get("PORT", 8443)))
+    site = web.TCPSite(runner, "0.0.0.0", PORT)
     await site.start()
+    print(f"[🌍] Фальшивый веб-сервер запущен на порту {PORT}")
 
-async def main():
+
+# 🧠 Запуск бота
+async def start_bot():
     app = Application.builder().token(TELEGRAM_TOKEN).build()
     app.add_handler(MessageHandler(filters.TEXT & ~filters.COMMAND, handle_message))
 
-    print("🔌 Стартуем фальшивый сервер и Telegram бота...")
+    webhook_url = f"{RENDER_EXTERNAL_URL}/webhook"
+    await app.bot.set_webhook(webhook_url)
+    print(f"[🔗] Webhook установлен: {webhook_url}")
 
-    await asyncio.gather(
-        fake_server(),
-        app.run_webhook(
-            listen="0.0.0.0",
-            port=int(os.environ.get("PORT", 8443)),
-            webhook_url=os.environ["RENDER_EXTERNAL_URL"] + "/webhook"
-        )
+    await app.run_webhook(
+        listen="0.0.0.0",
+        port=PORT,
+        webhook_url=webhook_url
     )
 
-if __name__ == '__main__':
-    import nest_asyncio
-    nest_asyncio.apply()
+
+# 🚀 Главная функция
+async def main():
+    print("[⚙️] Запуск...")
+    await asyncio.gather(
+        start_fake_server(),
+        start_bot()
+    )
+
+
+if __name__ == "__main__":
     asyncio.run(main())
